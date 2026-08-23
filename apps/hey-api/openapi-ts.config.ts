@@ -19,5 +19,6 @@ export default defineConfig({
       runtimeConfigPath: './src/api/client-config.ts',
     },
     '@hey-api/sdk',
+    '@tanstack/react-query',
   ],
 });

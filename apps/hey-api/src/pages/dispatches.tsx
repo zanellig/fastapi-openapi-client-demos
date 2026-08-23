@@ -1,11 +1,17 @@
-import { type FormEvent, useCallback, useEffect, useState } from 'react';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router';
 
 import {
-  advanceDispatch,
-  createDispatch,
-  listDispatches,
-} from '../api/generated/sdk.gen';
+  advanceDispatchMutation,
+  createDispatchMutation,
+  listDispatchesOptions,
+  listDispatchesQueryKey,
+} from '../api/generated/@tanstack/react-query.gen';
 import type {
   Dispatch,
   DispatchStatus,
@@ -17,33 +23,27 @@ type Filter = DispatchStatus | 'all';
 
 export function DispatchesPage() {
   const [filter, setFilter] = useState<Filter>('all');
-  const [dispatches, setDispatches] = useState<Dispatch[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const dispatchQuery = useQuery(
+    filter === 'all'
+      ? listDispatchesOptions()
+      : listDispatchesOptions({ query: { status: filter } }),
+  );
+  const dispatches: Dispatch[] = dispatchQuery.data ?? [];
 
-  const loadDispatches = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await listDispatches({
-        query: filter === 'all' ? {} : { status: filter },
-      });
-      if (result.error || !result.data) {
-        setError('The dispatch list could not be loaded.');
-        return;
-      }
-      setDispatches(result.data);
-    } catch {
-      setError('The API did not answer. Start the backend and try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [filter]);
+  const refreshDispatches = () =>
+    queryClient.invalidateQueries({ queryKey: listDispatchesQueryKey() });
 
-  useEffect(() => {
-    void loadDispatches();
-  }, [loadDispatches]);
+  const createMutation = useMutation({
+    ...createDispatchMutation(),
+    onSuccess: refreshDispatches,
+  });
+
+  const advanceMutation = useMutation({
+    ...advanceDispatchMutation(),
+    onSuccess: refreshDispatches,
+  });
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -61,60 +61,59 @@ export function DispatchesPage() {
       return;
     }
 
-    setSaving(true);
     setError(null);
     try {
-      const result = await createDispatch({
+      await createMutation.mutateAsync({
         body: { destination, contact, note, priority },
       });
-      if (result.error) {
-        setError('The API rejected the new dispatch. Check the form values.');
-        return;
-      }
       form.reset();
-      await loadDispatches();
     } catch {
-      setError('The API did not answer. The dispatch was not created.');
-    } finally {
-      setSaving(false);
+      setError('The API rejected the dispatch or did not answer.');
     }
   };
 
   const handleAdvance = async (dispatchId: number) => {
     setError(null);
     try {
-      const result = await advanceDispatch({ path: { dispatch_id: dispatchId } });
-      if (result.error) {
-        setError('This dispatch could not move to its next state.');
-        return;
-      }
-      await loadDispatches();
+      await advanceMutation.mutateAsync({
+        path: { dispatch_id: dispatchId },
+      });
     } catch {
-      setError('The API did not answer. No status was changed.');
+      setError('This dispatch could not move to its next state.');
     }
   };
+
+  const queryError = dispatchQuery.isError
+    ? 'The API did not answer. Start the backend and try again.'
+    : null;
 
   return (
     <div className="page-stack">
       <header className="page-heading">
         <div>
-          <p className="eyebrow">Typed list, body, and mutation</p>
+          <p className="eyebrow">Generated query and mutation options</p>
           <h1>Dispatch board</h1>
           <p className="page-deck">
-            Filter with a generated enum, create with a generated request body,
-            then advance a record through a server-owned lifecycle.
+            The filter changes the generated query key. Successful generated
+            mutations invalidate every cached dispatch list.
           </p>
         </div>
       </header>
 
-      {error ? <div className="notice notice-error">{error}</div> : null}
+      {error || queryError ? (
+        <div className="notice notice-error">{error ?? queryError}</div>
+      ) : null}
 
       <div className="dispatch-layout">
         <section className="section-block dispatch-board">
           <div className="section-heading section-heading-wrap">
             <div>
-              <p className="eyebrow">API response</p>
-              <h2>{loading ? 'Loading…' : `${dispatches.length} dispatches`}</h2>
+              <p className="eyebrow">TanStack Query cache</p>
+              <h2>
+                {dispatchQuery.isPending
+                  ? 'Loading…'
+                  : `${dispatches.length} dispatches`}
+              </h2>
             </div>
             <div className="filter-row" aria-label="Filter dispatches">
               {(['all', 'queued', 'in_transit', 'delivered'] as const).map(
@@ -137,7 +136,9 @@ export function DispatchesPage() {
               const advanceLabel = nextStatusLabel(dispatch.status);
               return (
                 <article className="dispatch-row" key={dispatch.id}>
-                  <div className="dispatch-id">D-{String(dispatch.id).padStart(3, '0')}</div>
+                  <div className="dispatch-id">
+                    D-{String(dispatch.id).padStart(3, '0')}
+                  </div>
                   <div className="dispatch-main">
                     <Link to={`/dispatches/${dispatch.id}`}>
                       {dispatch.destination}
@@ -155,6 +156,7 @@ export function DispatchesPage() {
                   {advanceLabel ? (
                     <button
                       className="button button-small"
+                      disabled={advanceMutation.isPending}
                       onClick={() => void handleAdvance(dispatch.id)}
                       type="button"
                     >
@@ -170,7 +172,7 @@ export function DispatchesPage() {
         </section>
 
         <aside className="create-panel">
-          <p className="eyebrow">POST /api/dispatches</p>
+          <p className="eyebrow">createDispatchMutation()</p>
           <h2>Add to the manifest</h2>
           <form onSubmit={handleCreate}>
             <label>
@@ -192,8 +194,11 @@ export function DispatchesPage() {
                 <option value="urgent">Urgent</option>
               </select>
             </label>
-            <button className="button button-primary button-full" disabled={saving}>
-              {saving ? 'Creating…' : 'Create dispatch'}
+            <button
+              className="button button-primary button-full"
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? 'Creating…' : 'Create dispatch'}
             </button>
           </form>
         </aside>

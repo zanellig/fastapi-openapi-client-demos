@@ -1,9 +1,12 @@
-const callExample = `const { data, error } = await createDispatch({
-  body: {
-    destination: 'Copper Ridge Observatory',
-    contact: 'Nora Singh',
-    priority: 'urgent',
-  },
+const callExample = `const dispatches = useQuery(
+  listDispatchesOptions({ query: { status: 'queued' } }),
+);
+
+const create = useMutation({
+  ...createDispatchMutation(),
+  onSuccess: () => queryClient.invalidateQueries({
+    queryKey: listDispatchesQueryKey(),
+  }),
 });`;
 
 export function ContractPage() {
@@ -11,11 +14,12 @@ export function ContractPage() {
     <div className="page-stack">
       <header className="page-heading">
         <div>
-          <p className="eyebrow">Generation path</p>
-          <h1>One contract, no shared backend language.</h1>
+          <p className="eyebrow">Hey API query generation path</p>
+          <h1>One contract becomes an SDK and reusable query options.</h1>
           <p className="page-deck">
             FastAPI publishes JSON. The generator turns it into TypeScript types,
-            named operations, and a Fetch-based client before application code runs.
+            Fetch operations, query keys, and TanStack Query options before
+            application code runs.
           </p>
         </div>
         <a
@@ -42,16 +46,16 @@ export function ContractPage() {
         </article>
         <i aria-hidden="true" />
         <article>
-          <span>TypeScript</span>
-          <h2>Generated SDK</h2>
-          <code>createDispatch(options)</code>
+          <span>TanStack Query</span>
+          <h2>Generated options</h2>
+          <code>listDispatchesOptions()</code>
         </article>
       </section>
 
       <section className="code-panel">
         <div className="code-panel-heading">
           <span>src/pages/dispatches.tsx</span>
-          <strong>Type-checked</strong>
+          <strong>Generated cache keys</strong>
         </div>
         <pre>
           <code>{callExample}</code>
@@ -60,17 +64,17 @@ export function ContractPage() {
 
       <div className="contract-notes">
         <article>
-          <h3>What the compiler catches</h3>
+          <h3>Query behavior</h3>
           <p>
-            Misspelled operation names, missing request fields, invalid enum values,
-            incorrect path parameters, and stale response assumptions.
+            Generated option factories carry the request type, response type, query
+            function, abort signal, and normalized query key into TanStack Query.
           </p>
         </article>
         <article>
-          <h3>What it cannot catch</h3>
+          <h3>Mutation behavior</h3>
           <p>
-            A server response that violates its own OpenAPI document. Add generated
-            runtime validators if that boundary needs active checking.
+            Generated mutation options call the typed SDK with error throwing enabled.
+            Application code decides which query families to invalidate on success.
           </p>
         </article>
       </div>

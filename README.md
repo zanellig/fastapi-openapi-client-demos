@@ -2,7 +2,7 @@
 
 This workspace compares two type-safe TypeScript clients generated from one live FastAPI contract:
 
-- `apps/hey-api` uses Hey API's generated Fetch SDK.
+- `apps/hey-api` uses Hey API's generated Fetch SDK, TanStack Query option factories, and query keys.
 - `apps/orval` uses Orval's generated Fetch functions and TanStack Query hooks.
 - `backend` is a small FastAPI service with an in-memory dispatch lifecycle and a deterministic forecast endpoint.
 
@@ -50,7 +50,7 @@ Keep the backend running, then open a second terminal:
 pnpm hey:dev
 ```
 
-Open `http://localhost:5173`. The Vite plugin generates the client when Vite starts. During development, Hey API polls the remote OpenAPI URL every 1.5 seconds and regenerates when the contract changes.
+Open `http://localhost:5173`. The Vite plugin generates the Fetch SDK and TanStack Query artifacts when Vite starts. During development, Hey API polls the remote OpenAPI URL every 1.5 seconds and regenerates when the contract changes.
 
 To generate once without starting Vite:
 
@@ -85,7 +85,7 @@ Generated files live in `apps/orval/src/api/generated` and should not be edited 
 
 ## What the sample covers
 
-The API uses explicit, stable `operation_id` values so generated functions remain readable:
+The API uses explicit, stable `operation_id` values so generated functions and query options remain readable:
 
 - `getHealth()`
 - `listDispatches({ status })`
@@ -93,6 +93,8 @@ The API uses explicit, stable `operation_id` values so generated functions remai
 - `getDispatch(dispatchId)`
 - `advanceDispatch(dispatchId)`
 - `getForecast({ city, days })`
+
+The Hey API client consumes generated factories such as `listDispatchesOptions()`, `getForecastOptions()`, `createDispatchMutation()`, and `listDispatchesQueryKey()`. The Orval client consumes generated `useListDispatches()` and `useCreateDispatch()` hooks. Both applications inherit the same retry and stale-time policy from their nearest `QueryClientProvider`.
 
 The dispatch lifecycle belongs to the backend. A client can ask to advance a dispatch, but it cannot set an arbitrary status. The UI demonstrates typed query parameters, request bodies, path parameters, response models, documented errors, and query invalidation.
 

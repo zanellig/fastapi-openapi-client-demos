@@ -101,6 +101,22 @@ I would configure it with:
 
 If Hey API reaches a stable major release and keeps its current Vite experience, I could easily see it becoming my preferred choice. It already feels better to use. The remaining question is whether its release and dependency stability catches up with its design.
 
+## Post-verdict addendum: TanStack Query parity build
+
+After writing the verdict above, the Hey API example was updated to generate and consume its official TanStack Query v5 artifacts. The application now uses `listDispatchesOptions()`, `getDispatchOptions()`, `getForecastOptions()`, `createDispatchMutation()`, `advanceDispatchMutation()`, and generated query keys through the same global `QueryClient` policy as the Orval application.
+
+The generated query functions call the Hey API SDK with `throwOnError: true`. HTTP failures therefore enter TanStack Query's error state without the manual status checks required by the default Orval Fetch output in this experiment.
+
+The equivalent production builds measured:
+
+- Hey API with TanStack Query: 106.83 kB gzip
+- Orval with TanStack Query: 103.95 kB gzip
+- Difference: Hey API was 2.88 kB larger, about 2.8 percent
+
+Hey API generated its five top-level artifacts in 109 milliseconds during the measured build. Orval's full command remained slower to start, but no controlled repeated benchmark was run.
+
+This parity build strengthens my opinion of Hey API's TanStack Query integration. The generated option-factory approach is compact at the call site, inherits global `QueryClient` defaults, preserves direct access to the typed SDK, and has better default HTTP error semantics for TanStack Query. It does not change the version-stability concern or the overall production recommendation yet.
+
 ## Sources consulted during this session
 
 ### OpenAPI TypeScript and openapi-fetch
@@ -163,6 +179,12 @@ If Hey API reaches a stable major release and keeps its current Vite experience,
 - [React Router client error reporting](https://github.com/remix-run/react-router/blob/main/docs/how-to/error-reporting.md)
 - [React Router SPA and SSR configuration](https://github.com/remix-run/react-router/blob/main/docs/api/framework-conventions/react-router.config.ts.md)
 
+### TanStack Query
+
+- [TanStack Query React quick start](https://tanstack.com/query/latest/docs/framework/react/quick-start)
+- [TanStack Query invalidation after mutations](https://tanstack.com/query/latest/docs/framework/react/guides/invalidations-from-mutations)
+- [TanStack Query default query function and global configuration](https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function)
+
 ### Package registries and release history
 
 - [@hey-api/openapi-ts on npm](https://www.npmjs.com/package/@hey-api/openapi-ts)
@@ -206,6 +228,7 @@ If Hey API reaches a stable major release and keeps its current Vite experience,
 - [Demo setup and commands](./README.md)
 - [Dependency audit record](./DEPENDENCY_AUDIT.md)
 - [Hey API generated SDK](./apps/hey-api/src/api/generated/sdk.gen.ts)
+- [Hey API generated TanStack Query options and keys](./apps/hey-api/src/api/generated/@tanstack/react-query.gen.ts)
 - [Orval generated Fetch functions and TanStack Query hooks](./apps/orval/src/api/generated/dispatch-desk.ts)
 - [Reserved-keyword OpenAPI fixture](./apps/hey-api/experiments/reserved-keywords.openapi.json)
 - [Reserved-keyword generated SDK](./apps/hey-api/experiments/generated/sdk.gen.ts)

@@ -1,42 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { Link } from 'react-router';
 
-import { listDispatches } from '../api/generated/sdk.gen';
+import { listDispatchesOptions } from '../api/generated/@tanstack/react-query.gen';
 import type { Dispatch } from '../api/generated/types.gen';
 import { formatStatus } from '../lib/format';
 
 export function DashboardPage() {
-  const [dispatches, setDispatches] = useState<Dispatch[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    listDispatches()
-      .then(({ data, error: responseError }) => {
-        if (!active) {
-          return;
-        }
-        if (responseError || !data) {
-          setError('The dispatch board could not be loaded.');
-          return;
-        }
-        setDispatches(data);
-      })
-      .catch(() => {
-        if (active) {
-          setError('The API did not answer. Start the backend and try again.');
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const dispatchQuery = useQuery(listDispatchesOptions());
+  const dispatches: Dispatch[] = dispatchQuery.data ?? [];
+  const error = dispatchQuery.isError
+    ? 'The API did not answer. Start the backend and try again.'
+    : null;
 
   const counts = useMemo(
     () => ({
@@ -51,8 +26,8 @@ export function DashboardPage() {
     <div className="page-stack">
       <header className="page-heading dashboard-heading">
         <div>
-          <p className="eyebrow">Live operations sample</p>
-          <h1>Every call on this desk is generated from the Python contract.</h1>
+          <p className="eyebrow">Generated query-options sample</p>
+          <h1>Every read on this desk is cached by its generated query key.</h1>
         </div>
         <Link className="button button-primary" to="/dispatches">
           Open dispatch board
@@ -64,7 +39,13 @@ export function DashboardPage() {
       <section className="status-ledger" aria-label="Dispatch status summary">
         <div className="ledger-intro">
           <p>Today’s manifest</p>
-          <span>{loading ? 'Reading API…' : `${dispatches.length} records`}</span>
+          <span>
+            {dispatchQuery.isPending
+              ? 'Reading API…'
+              : dispatchQuery.isFetching
+                ? 'Refreshing cache…'
+                : `${dispatches.length} cached records`}
+          </span>
         </div>
         <div className="ledger-count ledger-count-blue">
           <strong>{counts.queued}</strong>
@@ -111,11 +92,10 @@ export function DashboardPage() {
 
         <aside className="field-note">
           <p className="eyebrow">What to notice</p>
-          <h2>The handwritten client layer is only configuration.</h2>
+          <h2>The SDK and query options are generated together.</h2>
           <p>
-            Endpoint names, request bodies, path parameters, and response types
-            come from the live OpenAPI document. Change the backend, regenerate,
-            and TypeScript identifies every stale call.
+            Hey API derives Fetch calls, query keys, typed options, request bodies,
+            and response types from the same live OpenAPI document.
           </p>
           <Link className="text-link" to="/contract">
             Inspect the contract flow

@@ -18,6 +18,8 @@ The workspace generated a pnpm lockfile with `--lockfile-only --ignore-scripts`.
 - Vite React plugin 6.0.5
 - TypeScript 6.0.3
 
+TanStack Query 5.101.4 is a direct runtime dependency of both frontend applications. Adding the Hey API parity integration reused the already locked and audited package tree, so it introduced no new package version or lifecycle script.
+
 The first advisory scan found two high-severity CPU denial-of-service advisories in `js-yaml`, pulled in transitively by the Hey API generator. `pnpm-workspace.yaml` overrides that package to patched version 4.3.1.
 
 After the override:

@@ -1,14 +1,21 @@
+import { useQuery } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 
-import { getForecast } from '../api/generated/sdk.gen';
-import type { Forecast } from '../api/generated/types.gen';
+import { getForecastOptions } from '../api/generated/@tanstack/react-query.gen';
+import type { GetForecastData } from '../api/generated/types.gen';
+
+const idleOptions: GetForecastData['query'] = { city: 'Rosario', days: 3 };
 
 export function ForecastPage() {
-  const [forecast, setForecast] = useState<Forecast | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState<GetForecastData['query'] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const forecastQuery = useQuery({
+    ...getForecastOptions({ query: query ?? idleOptions }),
+    enabled: query !== null,
+  });
+  const forecast = forecastQuery.data ?? null;
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const city = String(data.get('city') ?? '').trim();
@@ -18,30 +25,23 @@ export function ForecastPage() {
       return;
     }
 
-    setLoading(true);
     setError(null);
-    try {
-      const result = await getForecast({ query: { city, days } });
-      if (result.error || !result.data) {
-        setError('The API rejected the forecast request.');
-        return;
-      }
-      setForecast(result.data);
-    } catch {
-      setError('The API did not answer. Start the backend and try again.');
-    } finally {
-      setLoading(false);
-    }
+    setQuery({ city, days });
   };
+
+  const queryError = forecastQuery.isError
+    ? 'The API rejected the forecast request or did not answer.'
+    : null;
 
   return (
     <div className="page-stack">
       <header className="page-heading">
         <div>
-          <p className="eyebrow">Typed query parameters</p>
+          <p className="eyebrow">Generated parameterized query key</p>
           <h1>Route forecast</h1>
           <p className="page-deck">
-            The city is required and the contract limits the horizon to five days.
+            Repeat a city and horizon to reuse the cached result generated from
+            those exact query parameters.
           </p>
         </div>
       </header>
@@ -62,12 +62,14 @@ export function ForecastPage() {
               ))}
             </select>
           </label>
-          <button className="button button-primary" disabled={loading}>
-            {loading ? 'Reading…' : 'Read forecast'}
+          <button className="button button-primary" disabled={forecastQuery.isFetching}>
+            {forecastQuery.isFetching ? 'Reading…' : 'Read forecast'}
           </button>
         </form>
 
-        {error ? <div className="notice notice-error">{error}</div> : null}
+        {error || queryError ? (
+          <div className="notice notice-error">{error ?? queryError}</div>
+        ) : null}
 
         <div
           className={forecast ? 'forecast-strip' : 'forecast-strip forecast-strip-empty'}
@@ -87,7 +89,7 @@ export function ForecastPage() {
           ) : (
             <div className="forecast-empty">
               <span className="weather-glyph" aria-hidden="true" />
-              <p>Choose a destination to call the typed forecast endpoint.</p>
+              <p>Choose a destination to create the first forecast query.</p>
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet } from 'react-router';
 
-import { getHealth } from './api/generated/sdk.gen';
+import { getHealthOptions } from './api/generated/@tanstack/react-query.gen';
 
 const navItems = [
   { to: '/', label: 'Desk', end: true },
@@ -11,25 +11,11 @@ const navItems = [
 ];
 
 export function AppShell() {
-  const [connected, setConnected] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    getHealth()
-      .then(({ data }) => {
-        if (active) {
-          setConnected(data?.status === 'ready');
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setConnected(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const healthQuery = useQuery({
+    ...getHealthOptions(),
+    refetchInterval: 15_000,
+  });
+  const connected = healthQuery.data?.status === 'ready';
 
   return (
     <div className="app-shell">
@@ -41,7 +27,7 @@ export function AppShell() {
           </div>
           <div>
             <p className="brand-name">Dispatch Desk</p>
-            <p className="brand-subtitle">Hey API client</p>
+            <p className="brand-subtitle">Hey API query client</p>
           </div>
         </div>
 
@@ -67,7 +53,7 @@ export function AppShell() {
             aria-hidden="true"
           />
           <div>
-            <p>{connected ? 'Contract online' : 'API unavailable'}</p>
+            <p>{connected ? 'Query cache online' : 'API unavailable'}</p>
             <span>127.0.0.1:8010</span>
           </div>
         </div>
@@ -79,9 +65,9 @@ export function AppShell() {
           <i aria-hidden="true" />
           <span>/openapi.json</span>
           <i aria-hidden="true" />
-          <span>generated SDK</span>
+          <span>generated query options</span>
           <i aria-hidden="true" />
-          <strong>typed fetch</strong>
+          <strong>query cache</strong>
         </div>
         <main className="page-frame">
           <Outlet />
