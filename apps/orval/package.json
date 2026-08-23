@@ -1,0 +1,32 @@
+{
+  "name": "@demo/orval",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "api:sync": "node scripts/sync-openapi.mjs",
+    "api:generate": "orval --config orval.config.ts",
+    "api:watch": "node scripts/sync-openapi.mjs --watch",
+    "codegen:watch": "orval --config orval.config.ts --watch",
+    "dev": "node scripts/dev.mjs",
+    "dev:vite": "vite --port 5174",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "check": "pnpm typecheck && pnpm build"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.101.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-router": "8.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.0.5",
+    "orval": "8.24.0",
+    "typescript": "6.0.3",
+    "vite": "8.2.1"
+  }
+}

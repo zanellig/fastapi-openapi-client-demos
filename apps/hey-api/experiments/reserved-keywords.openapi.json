@@ -1,0 +1,111 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Reserved keyword experiment",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/keywords/class": {
+      "get": {
+        "operationId": "class",
+        "responses": {
+          "200": {
+            "description": "A class keyword response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": { "type": "string" }
+                  },
+                  "required": ["value"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keywords/delete": {
+      "post": {
+        "operationId": "delete",
+        "responses": {
+          "200": {
+            "description": "A delete keyword response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": { "type": "boolean" }
+                  },
+                  "required": ["deleted"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keywords/default": {
+      "get": {
+        "operationId": "default",
+        "responses": {
+          "200": {
+            "description": "A default keyword response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keywords/function": {
+      "get": {
+        "operationId": "function",
+        "responses": {
+          "200": {
+            "description": "A function keyword response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keywords/interface": {
+      "get": {
+        "operationId": "interface",
+        "responses": {
+          "200": {
+            "description": "A TypeScript interface keyword response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keywords/enum": {
+      "get": {
+        "operationId": "enum",
+        "responses": {
+          "200": {
+            "description": "A TypeScript enum keyword response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "fastapi-openapi-client-demos",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.15.1",
+  "scripts": {
+    "backend:dev": "uv run --project backend uvicorn app.main:app --app-dir backend --reload --port 8010",
+    "backend:test": "uv run --project backend pytest backend/tests",
+    "hey:generate": "pnpm --filter @demo/hey-api api:generate",
+    "hey:dev": "pnpm --filter @demo/hey-api dev",
+    "orval:sync": "pnpm --filter @demo/orval api:sync",
+    "orval:generate": "pnpm --filter @demo/orval api:generate",
+    "orval:dev": "pnpm --filter @demo/orval dev",
+    "audit:js": "pnpm audit --audit-level=low && pnpm peers check",
+    "check": "pnpm backend:test && pnpm --filter @demo/hey-api check && pnpm --filter @demo/orval check"
+  }
+}

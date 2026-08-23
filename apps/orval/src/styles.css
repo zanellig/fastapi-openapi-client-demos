@@ -1,0 +1,11 @@
+@import "../../hey-api/src/styles.css";
+
+.brand-mark span,
+.nav-link-active .nav-notch {
+  background: #f1a13a;
+  border-color: #f1a13a;
+}
+
+.create-panel {
+  border-top-color: #f1a13a;
+}

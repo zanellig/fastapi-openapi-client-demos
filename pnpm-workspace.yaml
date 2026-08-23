@@ -1,0 +1,5 @@
+packages:
+  - apps/*
+
+overrides:
+  js-yaml: 4.3.1

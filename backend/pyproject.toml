@@ -1,0 +1,20 @@
+[project]
+name = "dispatch-desk-api"
+version = "1.0.0"
+description = "FastAPI contract used by the OpenAPI client demos"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.116,<1",
+  "uvicorn>=0.35,<1",
+]
+
+[dependency-groups]
+dev = [
+  "httpx2>=2.12,<3",
+  "pytest>=8,<10",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+testpaths = ["tests"]
