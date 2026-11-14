@@ -1,0 +1,528 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Dispatch Desk API",
+    "summary": "A compact OpenAPI contract for generated TypeScript clients.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Health",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dispatches": {
+      "get": {
+        "tags": [
+          "dispatches"
+        ],
+        "summary": "List Dispatches",
+        "operationId": "listDispatches",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DispatchStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only dispatches in this lifecycle state.",
+              "title": "Status"
+            },
+            "description": "Return only dispatches in this lifecycle state."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Dispatch"
+                  },
+                  "title": "Response Listdispatches"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "dispatches"
+        ],
+        "summary": "Create Dispatch",
+        "operationId": "createDispatch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispatch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dispatches/{dispatch_id}": {
+      "get": {
+        "tags": [
+          "dispatches"
+        ],
+        "summary": "Get Dispatch",
+        "operationId": "getDispatch",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Dispatch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispatch"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dispatches/{dispatch_id}/advance": {
+      "post": {
+        "tags": [
+          "dispatches"
+        ],
+        "summary": "Advance Dispatch",
+        "operationId": "advanceDispatch",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Dispatch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispatch"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/forecast": {
+      "get": {
+        "tags": [
+          "planning"
+        ],
+        "summary": "Get Forecast",
+        "operationId": "getForecast",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 40,
+              "title": "City"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5,
+              "minimum": 1,
+              "default": 3,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forecast"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ApiError"
+      },
+      "Dispatch": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DispatchStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "destination",
+          "contact",
+          "note",
+          "priority",
+          "status",
+          "created_at"
+        ],
+        "title": "Dispatch"
+      },
+      "DispatchCreate": {
+        "properties": {
+          "destination": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Destination"
+          },
+          "contact": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Contact"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 160,
+            "title": "Note",
+            "default": ""
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority",
+            "default": "standard"
+          }
+        },
+        "type": "object",
+        "required": [
+          "destination",
+          "contact"
+        ],
+        "title": "DispatchCreate"
+      },
+      "DispatchStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "in_transit",
+          "delivered"
+        ],
+        "title": "DispatchStatus"
+      },
+      "Forecast": {
+        "properties": {
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastDay"
+            },
+            "type": "array",
+            "title": "Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "city",
+          "days"
+        ],
+        "title": "Forecast"
+      },
+      "ForecastDay": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "title": "Day"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition"
+          },
+          "high_c": {
+            "type": "integer",
+            "title": "High C"
+          },
+          "low_c": {
+            "type": "integer",
+            "title": "Low C"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "condition",
+          "high_c",
+          "low_c"
+        ],
+        "title": "ForecastDay"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "openapi_url": {
+            "type": "string",
+            "title": "Openapi Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "openapi_url"
+        ],
+        "title": "Health"
+      },
+      "Priority": {
+        "type": "string",
+        "enum": [
+          "standard",
+          "urgent"
+        ],
+        "title": "Priority"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
