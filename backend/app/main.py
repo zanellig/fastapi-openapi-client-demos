@@ -1,8 +1,10 @@
 from collections.abc import Sequence
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import StringConstraints
 
 from .models import (
     ApiError,
@@ -23,14 +25,20 @@ def create_app() -> FastAPI:
         summary="A compact OpenAPI contract for generated TypeScript clients.",
         version="1.0.0",
         openapi_url="/openapi.json",
+        servers=[{"url": "http://127.0.0.1:8010", "description": "Local development"}],
         docs_url="/docs",
     )
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://localhost:5174"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_origins=[
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+        ],
+        allow_credentials=False,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
     )
 
     @application.get(
@@ -113,13 +121,16 @@ def create_app() -> FastAPI:
         tags=["planning"],
     )
     async def get_forecast(
-        city: str = Query(min_length=2, max_length=40),
+        city: Annotated[
+            str,
+            StringConstraints(strip_whitespace=True, min_length=2, max_length=40),
+            Query(),
+        ],
         days: int = Query(default=3, ge=1, le=5),
     ) -> Forecast:
-        clean_city = city.strip()
         conditions = ("Clear", "Crosswind", "Light rain", "Cloud cover")
-        city_seed = sum(ord(character) for character in clean_city)
-        today = date.today()
+        city_seed = sum(ord(character) for character in city)
+        today = datetime.now(UTC).date()
         forecast_days = [
             ForecastDay(
                 day=(today + timedelta(days=offset)).isoformat(),
@@ -129,7 +140,7 @@ def create_app() -> FastAPI:
             )
             for offset in range(days)
         ]
-        return Forecast(city=clean_city, days=forecast_days)
+        return Forecast(city=city, days=forecast_days)
 
     return application
 

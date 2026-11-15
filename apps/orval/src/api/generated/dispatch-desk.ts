@@ -770,3 +770,10 @@ export function useGetForecast<TData = Awaited<ReturnType<typeof getForecast>>, 
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+
+
+
+
+
+

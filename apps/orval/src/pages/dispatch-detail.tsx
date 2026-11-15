@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router';
 
 import { useGetDispatch } from '../api/generated/dispatch-desk';
 import { formatDate, formatStatus } from '../lib/format';
+import { responseDetail } from '../lib/response-detail';
 
 export function DispatchDetailPage() {
   const params = useParams();
@@ -17,7 +18,10 @@ export function DispatchDetailPage() {
     : dispatchQuery.isError
       ? 'The API did not answer.'
       : dispatchQuery.data && dispatchQuery.data.status !== 200
-        ? 'The API has no dispatch with this identifier.'
+        ? responseDetail(
+            dispatchQuery.data,
+            'The API has no dispatch with this identifier.',
+          )
         : null;
 
   return (

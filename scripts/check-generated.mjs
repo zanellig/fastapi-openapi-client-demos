@@ -2,6 +2,11 @@
 import { execFileSync } from 'node:child_process';
 
 const paths = ['openapi', 'apps/hey-api/src/api/generated', 'apps/orval/src/api/generated'];
+// Refresh stat data first so files rewritten with identical content are not reported.
+// update-index exits non-zero when files really changed; the status call below reports them.
+try {
+  execFileSync('git', ['update-index', '-q', '--refresh'], { stdio: 'ignore' });
+} catch {}
 const status = execFileSync('git', ['status', '--porcelain', '--', ...paths], {
   encoding: 'utf8',
 });

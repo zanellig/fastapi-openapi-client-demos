@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 
+import { isClientError, registerApiErrorInterceptor } from './api/errors';
 import { AppShell, RouteError } from './app-shell';
 import { ContractPage } from './pages/contract';
 import { DashboardPage } from './pages/dashboard';
@@ -12,10 +13,13 @@ import { DispatchesPage } from './pages/dispatches';
 import { ForecastPage } from './pages/forecast';
 import './styles.css';
 
+registerApiErrorInterceptor();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      // Retry once, but never for 4xx: a missing dispatch will not reappear.
+      retry: (failureCount, error) => !isClientError(error) && failureCount < 1,
       staleTime: 30_000,
     },
   },

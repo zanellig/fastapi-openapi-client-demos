@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -5,7 +7,7 @@ from app.main import create_app
 
 
 @pytest.fixture
-def client() -> TestClient:
+def client() -> Iterator[TestClient]:
     with TestClient(create_app()) as test_client:
         yield test_client
 
@@ -71,3 +73,82 @@ def test_forecast_query_parameters_are_validated(client: TestClient) -> None:
     assert response.json()["city"] == "Rosario"
     assert len(response.json()["days"]) == 4
     assert invalid_response.status_code == 422
+
+
+def test_whitespace_only_dispatch_fields_are_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/api/dispatches",
+        json={"destination": "   ", "contact": "  "},
+    )
+
+    assert response.status_code == 422
+    rejected_fields = {error["loc"][-1] for error in response.json()["detail"]}
+    assert rejected_fields == {"destination", "contact"}
+
+
+def test_padded_dispatch_fields_are_stored_stripped(client: TestClient) -> None:
+    response = client.post(
+        "/api/dispatches",
+        json={
+            "destination": "  Copper Ridge  ",
+            "contact": " Nora Singh ",
+            "note": "  Lower gate  ",
+        },
+    )
+
+    assert response.status_code == 201
+    created = response.json()
+    assert created["destination"] == "Copper Ridge"
+    assert created["contact"] == "Nora Singh"
+    assert created["note"] == "Lower gate"
+
+    fetched = client.get(f"/api/dispatches/{created['id']}").json()
+    assert fetched["destination"] == "Copper Ridge"
+
+
+def test_whitespace_only_forecast_city_is_rejected(client: TestClient) -> None:
+    response = client.get("/api/forecast", params={"city": "   "})
+
+    assert response.status_code == 422
+
+
+def test_forecast_city_is_stripped(client: TestClient) -> None:
+    response = client.get("/api/forecast", params={"city": "  Rosario  "})
+
+    assert response.status_code == 200
+    assert response.json()["city"] == "Rosario"
+
+
+def test_forecast_city_constraints_are_documented(client: TestClient) -> None:
+    parameters = client.get("/openapi.json").json()["paths"]["/api/forecast"]["get"][
+        "parameters"
+    ]
+    city = next(item for item in parameters if item["name"] == "city")
+
+    assert city["required"] is True
+    assert city["schema"]["minLength"] == 2
+    assert city["schema"]["maxLength"] == 40
+
+
+def test_advancing_a_missing_dispatch_returns_not_found(client: TestClient) -> None:
+    response = client.post("/api/dispatches/999/advance")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Dispatch not found"}
+
+
+def test_cors_preflight_allows_loopback_origin_without_credentials(
+    client: TestClient,
+) -> None:
+    response = client.options(
+        "/api/dispatches",
+        headers={
+            "Origin": "http://127.0.0.1:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:5173"
+    assert "access-control-allow-credentials" not in response.headers
