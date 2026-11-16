@@ -15,6 +15,7 @@ import type {
   Priority,
 } from '../api/generated/models';
 import { formatDate, formatStatus, nextStatusLabel } from '../lib/format';
+import { responseDetail } from '../lib/response-detail';
 
 type Filter = DispatchStatus | 'all';
 
@@ -48,11 +49,19 @@ export function DispatchesPage() {
 
   const advanceMutation = useAdvanceDispatch({
     mutation: {
-      onSuccess: async (response) => {
+      onSuccess: (response) => {
         if (response.status !== 200) {
-          setError('This dispatch could not move to its next state.');
-          return;
+          setError(
+            responseDetail(
+              response,
+              'This dispatch could not move to its next state.',
+            ),
+          );
         }
+      },
+      // A 404/409 also resolves here, and it means the cached list is out of
+      // date, so refresh after every settled advance, not only on 200.
+      onSettled: async () => {
         await refreshDispatches();
       },
     },

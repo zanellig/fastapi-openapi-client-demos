@@ -6,6 +6,7 @@ import {
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router';
 
+import { apiErrorMessage } from '../api/errors';
 import {
   advanceDispatchMutation,
   createDispatchMutation,
@@ -40,9 +41,10 @@ export function DispatchesPage() {
     onSuccess: refreshDispatches,
   });
 
+  // Refresh on failure too: a 409 means this board is stale.
   const advanceMutation = useMutation({
     ...advanceDispatchMutation(),
-    onSuccess: refreshDispatches,
+    onSettled: refreshDispatches,
   });
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
@@ -67,8 +69,13 @@ export function DispatchesPage() {
         body: { destination, contact, note, priority },
       });
       form.reset();
-    } catch {
-      setError('The API rejected the dispatch or did not answer.');
+    } catch (caught) {
+      setError(
+        apiErrorMessage(caught, {
+          rejected: 'The API rejected the dispatch.',
+          unreachable: 'The API did not answer. Start the backend and try again.',
+        }),
+      );
     }
   };
 
@@ -78,13 +85,21 @@ export function DispatchesPage() {
       await advanceMutation.mutateAsync({
         path: { dispatch_id: dispatchId },
       });
-    } catch {
-      setError('This dispatch could not move to its next state.');
+    } catch (caught) {
+      setError(
+        apiErrorMessage(caught, {
+          rejected: 'This dispatch could not move to its next state.',
+          unreachable: 'The API did not answer. Start the backend and try again.',
+        }),
+      );
     }
   };
 
   const queryError = dispatchQuery.isError
-    ? 'The API did not answer. Start the backend and try again.'
+    ? apiErrorMessage(dispatchQuery.error, {
+        rejected: 'The API rejected the dispatch list request.',
+        unreachable: 'The API did not answer. Start the backend and try again.',
+      })
     : null;
 
   return (
@@ -94,8 +109,9 @@ export function DispatchesPage() {
           <p className="eyebrow">Generated query and mutation options</p>
           <h1>Dispatch board</h1>
           <p className="page-deck">
-            The filter changes the generated query key. Successful generated
-            mutations invalidate every cached dispatch list.
+            The filter changes the generated query key. Generated mutations
+            invalidate every cached dispatch list, and a rejected advance
+            refreshes it too.
           </p>
         </div>
       </header>

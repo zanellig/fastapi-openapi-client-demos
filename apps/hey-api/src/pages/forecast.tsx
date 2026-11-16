@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 
+import { apiErrorMessage } from '../api/errors';
 import { getForecastOptions } from '../api/generated/@tanstack/react-query.gen';
 import type { GetForecastData } from '../api/generated/types.gen';
 
@@ -30,7 +31,10 @@ export function ForecastPage() {
   };
 
   const queryError = forecastQuery.isError
-    ? 'The API rejected the forecast request or did not answer.'
+    ? apiErrorMessage(forecastQuery.error, {
+        rejected: 'The API rejected the forecast request.',
+        unreachable: 'The API did not answer. Start the backend and try again.',
+      })
     : null;
 
   return (

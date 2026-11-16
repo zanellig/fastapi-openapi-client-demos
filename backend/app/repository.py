@@ -25,9 +25,9 @@ class DispatchStore:
     def create_dispatch(self, request: DispatchCreate) -> Dispatch:
         dispatch = Dispatch(
             id=self._next_id,
-            destination=request.destination.strip(),
-            contact=request.contact.strip(),
-            note=request.note.strip(),
+            destination=request.destination,
+            contact=request.contact,
+            note=request.note,
             priority=request.priority,
             status=DispatchStatus.QUEUED,
             created_at=datetime.now(UTC),

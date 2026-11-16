@@ -12,6 +12,8 @@
     "orval:generate": "pnpm --filter @demo/orval api:generate",
     "orval:dev": "pnpm --filter @demo/orval dev",
     "audit:js": "pnpm audit --audit-level=low && pnpm peers check",
-    "check": "pnpm backend:test && pnpm --filter @demo/hey-api check && pnpm --filter @demo/orval check"
+    "check": "pnpm backend:test && pnpm openapi:export && pnpm --filter @demo/hey-api check && pnpm --filter @demo/orval check && pnpm check:generated",
+    "openapi:export": "uv run --project backend python backend/scripts/export_openapi.py",
+    "check:generated": "node scripts/check-generated.mjs"
   }
 }

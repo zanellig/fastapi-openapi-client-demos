@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, StringConstraints
 
 
 class DispatchStatus(StrEnum):
@@ -16,9 +17,13 @@ class Priority(StrEnum):
 
 
 class DispatchCreate(BaseModel):
-    destination: str = Field(min_length=2, max_length=80)
-    contact: str = Field(min_length=2, max_length=50)
-    note: str = Field(default="", max_length=160)
+    destination: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=2, max_length=80)
+    ]
+    contact: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=2, max_length=50)
+    ]
+    note: Annotated[str, StringConstraints(strip_whitespace=True, max_length=160)] = ""
     priority: Priority = Priority.STANDARD
 
 

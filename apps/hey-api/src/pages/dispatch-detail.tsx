@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
 
+import { apiErrorMessage } from '../api/errors';
 import { getDispatchOptions } from '../api/generated/@tanstack/react-query.gen';
 import { formatDate, formatStatus } from '../lib/format';
 
@@ -16,7 +17,10 @@ export function DispatchDetailPage() {
   const error = !validId
     ? 'The dispatch identifier is invalid.'
     : dispatchQuery.isError
-      ? 'The API has no dispatch with this identifier or did not answer.'
+      ? apiErrorMessage(dispatchQuery.error, {
+          rejected: 'The API has no dispatch with this identifier.',
+          unreachable: 'The API did not answer. Start the backend and try again.',
+        })
       : null;
 
   return (
